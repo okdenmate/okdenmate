@@ -45,9 +45,10 @@ const GLYPH: Record<string, string> = {
   info: '○',
   specialty: '◆',
   commodity: '●',
+  hazard: '◈',
 };
 
-export function Chip({ tone = 'neutral', children }: { tone?: Severity | 'specialty' | 'commodity'; children: ReactNode }) {
+export function Chip({ tone = 'neutral', children }: { tone?: Severity | 'specialty' | 'commodity' | 'hazard'; children: ReactNode }) {
   return (
     <span className={`chip ${tone}`}>
       <span className="glyph" aria-hidden="true">{GLYPH[tone] ?? GLYPH['neutral']}</span>

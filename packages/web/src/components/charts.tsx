@@ -223,7 +223,7 @@ export function MixBars({
                     x2={labelW + (targetBps / 10_000) * plotW}
                     y1={y - 7}
                     y2={y + barH + 7}
-                    stroke="var(--lime)"
+                    stroke="var(--accent)"
                     strokeWidth={1.5}
                     strokeDasharray="3 3"
                   />

@@ -17,6 +17,7 @@ border at 22px — precisely so that isolation is proven rather than assumed.
         data-endpoint="https://crm.uknitrates.com"
         data-mount="#ukn-enquiry"
         data-phone="01553 817744"
+        data-profile="ukn"
         data-surface="dark"></script>
 ```
 
@@ -25,6 +26,7 @@ border at 22px — precisely so that isolation is proven rather than assumed.
 | `data-endpoint` | the script's own origin | Where the CRM lives |
 | `data-mount` | `#ukn-enquiry` | Selector to mount into. Every match gets an instance |
 | `data-phone` | `01553 817744` | Shown as the secondary action throughout |
+| `data-profile` | `ukn` | `group` for the shared timber palette. See [DESIGN.md](DESIGN.md) |
 | `data-surface` | `dark` | `light` for a page not ready to carry a dark panel |
 
 For a second instance on the same page, or one placed after load:

@@ -35,12 +35,14 @@
 
       <div class="split">
         <div>
-          <div class="caption">Dark, the group design system default</div>
+          <div class="caption">UK Nitrates profile, dark. The default.</div>
           <div id="ukn-enquiry"></div>
         </div>
         <div>
-          <div class="caption">Light, for a page that is not ready to carry a dark panel</div>
+          <div class="caption">UK Nitrates profile, light surface</div>
           <div id="ukn-enquiry-light"></div>
+          <div class="caption" style="margin-top:32px">Group profile, the shared timber palette</div>
+          <div id="ukn-enquiry-group"></div>
         </div>
       </div>
 
@@ -50,6 +52,7 @@
         data-endpoint="https://crm.uknitrates.com"
         data-mount="#ukn-enquiry"
         data-phone="01553 817744"
+        data-profile="ukn"
         data-surface="dark"&gt;&lt;/script&gt;</code></pre>
       <p class="lede">
         Add the site's origin to <code>UKN_PUBLIC_ORIGINS</code> on the server, or the browser will refuse the
@@ -63,6 +66,7 @@
       // explicitly through the exported helper.
       import { mount } from '/src/widget.ts';
       mount('#ukn-enquiry-light', { surface: 'light', endpoint: 'http://localhost:4111' });
+      mount('#ukn-enquiry-group', { profile: 'group', endpoint: 'http://localhost:4111' });
     </script>
   </body>
 </html>

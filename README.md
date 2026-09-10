@@ -112,6 +112,7 @@ cross-origin post. See [`docs/WIDGET.md`](docs/WIDGET.md).
 | [`docs/DOMAIN.md`](docs/DOMAIN.md) | The engines, and the reasoning behind each rule |
 | [`docs/API.md`](docs/API.md) | Every endpoint |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Why the system is built this way |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | The two design profiles, and why the default is not the shared one |
 | [`docs/WIDGET.md`](docs/WIDGET.md) | The site-side enquiry form, and how to deploy it |
 | [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md) | What is still unknown, and what each unknown blocks |
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, ApiError } from './api';
+import { applyProfile, currentProfile, PROFILES, type ProfileId } from './design';
 import type { Product, User } from './types';
 import { Button, Callout, Field, Panel } from './components/ui';
 import { Dashboard } from './views/Dashboard';
@@ -134,6 +135,39 @@ function SignIn({ onSignedIn }: { onSignedIn: (u: User) => void }) {
   );
 }
 
+function ProfileSwitch() {
+  const [profile, setProfile] = useState<ProfileId>(() => currentProfile());
+  const active = PROFILES.find((p) => p.id === profile);
+  return (
+    <div style={{ padding: '0 10px', marginBottom: 14 }}>
+      <div className="nav-group-label" style={{ padding: '0 0 6px' }}>
+        Design profile
+      </div>
+      <div className="row" style={{ gap: 6 }}>
+        {PROFILES.map((p) => (
+          <Button
+            key={p.id}
+            small
+            variant={p.id === profile ? 'primary' : 'default'}
+            title={p.description}
+            onClick={() => {
+              applyProfile(p.id);
+              setProfile(p.id);
+            }}
+          >
+            {p.name}
+          </Button>
+        ))}
+      </div>
+      {active && (
+        <div className="dim" style={{ fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
+          {active.description}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function App() {
   const [user, setUser] = useState<User | null>(null);
   const [reference, setReference] = useState<Reference | null>(null);
@@ -234,6 +268,8 @@ export function App() {
             })}
           </div>
         ))}
+        <div className="divider" />
+        <ProfileSwitch />
         <div className="divider" />
         <div style={{ padding: '0 10px' }}>
           <div style={{ fontSize: 13 }}>{user.name}</div>

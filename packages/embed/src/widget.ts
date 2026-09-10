@@ -38,6 +38,8 @@ interface Config {
   endpoint: string;
   phone: string;
   surface: 'dark' | 'light';
+  /** Which identity to wear. Matches the application's design profiles. */
+  profile: 'ukn' | 'group';
 }
 
 type Stage = 'calculator' | 'qualify' | 'contact' | 'done';
@@ -134,6 +136,7 @@ class EnquiryWidget {
     style.textContent = CSS;
     this.root.append(style);
     host.setAttribute('data-surface', config.surface);
+    host.setAttribute('data-profile', config.profile);
 
     this.track('page_view');
     this.render();
@@ -775,10 +778,12 @@ function readConfig(script: HTMLScriptElement | null): Config {
     }
   })();
   const surface = script?.dataset['surface'] === 'light' ? 'light' : 'dark';
+  const profile = script?.dataset['profile'] === 'group' ? 'group' : 'ukn';
   return {
     endpoint: (script?.dataset['endpoint'] ?? origin).replace(/\/+$/, ''),
     phone: script?.dataset['phone'] ?? '01553 817744',
     surface,
+    profile,
   };
 }
 

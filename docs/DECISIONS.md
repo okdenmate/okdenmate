@@ -62,12 +62,24 @@ Tonnes of ammonium nitrate will always dominate revenue and never dominate
 profit. The mix-shift target, the concentration index and the commission basis
 are all margin-denominated, so real progress does not look like failure.
 
+## The palette is a profile, not a constant
+
+The brief adopts one visual system across both businesses for production-cost
+reasons, and leaves the identity consequence open. The shared palette is also,
+on inspection, Reeve Wood's own: warm timber and that company's brand sage.
+Extending it to a nitrate distributor is dressing one business in another's.
+
+So the token set became a profile. `ukn` is the default here — cold ground,
+chemical accent, hazard yellow reserved for Class 5.1 — and `group` is kept
+whole. Component CSS names only roles, never colours, which is what makes the
+switch a swap rather than a rewrite. See [`DESIGN.md`](DESIGN.md).
+
 ## Chart colours are validated, not chosen
 
-The design system mandates a dark warm ground and reserves its lime accent for
-the primary action and one headline figure. Chart series therefore need their own
-palette, and it was checked against that exact background for lightness,
-chroma, contrast and colour-vision separation rather than picked by eye.
+Chart series need their own palette, and it was checked against both grounds for
+lightness, chroma, contrast and colour-vision separation rather than picked by
+eye. It does not change between profiles, because the separation was measured
+against those exact backgrounds.
 
 The result is deliberately two categorical hues, not six. The only categorical
 split in this system is commodity against specialty, and two well-separated hues

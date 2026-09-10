@@ -64,9 +64,13 @@ export function Catalogue({ ctx }: { ctx: Ctx }) {
                     )}
                   </td>
                   <td className="muted">{p.analysis ?? '—'}</td>
-                  <td className="muted" style={{ fontSize: 12.5 }}>
-                    {p.unClass ?? '—'}
-                    {p.unNumber && <div className="dim">{p.unNumber}</div>}
+                  <td style={{ fontSize: 12.5 }}>
+                    {p.unClass ? (
+                      <Chip tone="hazard">{p.unClass}</Chip>
+                    ) : (
+                      <span className="dim">Not classified</span>
+                    )}
+                    {p.unNumber && <div className="dim" style={{ marginTop: 4 }}>{p.unNumber}</div>}
                   </td>
                   <td>
                     {p.ukStock ? (
