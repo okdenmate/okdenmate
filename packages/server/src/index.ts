@@ -3,6 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
+import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
 import { ZodError } from 'zod';
 import { Db } from './db.js';
@@ -21,6 +22,49 @@ export async function buildServer(dbPath: string = process.env['UKN_DB'] ?? DEFA
   });
 
   await app.register(cookie, { secret: process.env['COOKIE_SECRET'] ?? 'ukn-dev-secret-change-me' });
+
+  /*
+   * Cross-origin access, for the enquiry widget only.
+   *
+   * The widget runs on uknitrates.com and posts to this server, so the public
+   * intake and event routes need CORS. Nothing else does, and nothing else gets
+   * it: the allowance is scoped to paths under /api/public and never sends
+   * credentials, so a malicious page cannot ride a signed-in session into the
+   * authenticated API.
+   *
+   * Origins come from UKN_PUBLIC_ORIGINS, comma separated. Unset means the
+   * widget is not deployed anywhere yet and cross-origin posts are refused,
+   * which is the right default: an open allowance is easy to add later and
+   * hard to notice once it is there.
+   */
+  const publicOrigins = (process.env['UKN_PUBLIC_ORIGINS'] ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  await app.register(cors, {
+    origin(origin, cb) {
+      // A request with no Origin header is not a browser cross-origin request.
+      if (!origin) return cb(null, false);
+      cb(null, publicOrigins.includes(origin));
+    },
+    credentials: false,
+    methods: ['POST', 'OPTIONS'],
+    allowedHeaders: ['content-type'],
+    maxAge: 86_400,
+    hook: 'onRequest',
+  });
+
+  // Scope the allowance to the public routes. Fastify's cors plugin is global,
+  // so the header is stripped again anywhere it does not belong.
+  app.addHook('onSend', async (req, reply, payload) => {
+    if (!req.url.startsWith('/api/public/')) {
+      reply.removeHeader('access-control-allow-origin');
+      reply.removeHeader('access-control-allow-methods');
+      reply.removeHeader('access-control-allow-headers');
+    }
+    return payload;
+  });
 
   // Attach the signed-in user to every request. Public routes simply ignore it.
   app.addHook('onRequest', async (req) => {

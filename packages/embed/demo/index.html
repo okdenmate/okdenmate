@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Enquiry widget preview</title>
+    <style>
+      /*
+       * Deliberately hostile host styles. The widget lives in a shadow root, so
+       * none of this should reach it. If the preview looks wrong, the isolation
+       * has broken and that is worth knowing before it ships.
+       */
+      * { font-family: Georgia, serif; }
+      input, select, textarea, button { border: 4px dashed magenta !important; font-size: 22px !important; }
+      body { margin: 0; background: #eae6dd; color: #221; }
+      .page { max-width: 960px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1 { font-size: 30px; margin: 0 0 6px; }
+      .lede { color: #55503f; max-width: 62ch; }
+      .split { display: grid; gap: 32px; grid-template-columns: 1fr 1fr; margin-top: 32px; }
+      @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+      .caption { font-size: 13px; color: #55503f; margin-bottom: 10px; }
+      code { background: #fff; padding: 2px 5px; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 13px; }
+      pre { background: #221c12; color: #f4efe2; padding: 16px; border-radius: 12px; overflow-x: auto; font-size: 13px; }
+      pre code { background: none; color: inherit; padding: 0; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Enquiry widget preview</h1>
+      <p class="lede">
+        This page loads deliberately hostile styles: every form control on it is set to a dashed magenta border
+        at 22px. The widget is unaffected because it renders inside a shadow root. That isolation is the whole
+        reason it can be dropped into an unknown theme without a rehearsal.
+      </p>
+
+      <div class="split">
+        <div>
+          <div class="caption">Dark, the group design system default</div>
+          <div id="ukn-enquiry"></div>
+        </div>
+        <div>
+          <div class="caption">Light, for a page that is not ready to carry a dark panel</div>
+          <div id="ukn-enquiry-light"></div>
+        </div>
+      </div>
+
+      <h2 style="margin-top:48px">Putting it on the site</h2>
+      <pre><code>&lt;div id="ukn-enquiry"&gt;&lt;/div&gt;
+&lt;script src="https://crm.uknitrates.com/ukn-enquiry.js"
+        data-endpoint="https://crm.uknitrates.com"
+        data-mount="#ukn-enquiry"
+        data-phone="01553 817744"
+        data-surface="dark"&gt;&lt;/script&gt;</code></pre>
+      <p class="lede">
+        Add the site's origin to <code>UKN_PUBLIC_ORIGINS</code> on the server, or the browser will refuse the
+        cross-origin post.
+      </p>
+    </div>
+
+    <script type="module" src="/src/widget.ts" data-mount="#ukn-enquiry" data-endpoint="http://localhost:4111"></script>
+    <script type="module">
+      // The script tag above mounts the dark instance. Mount the light one
+      // explicitly through the exported helper.
+      import { mount } from '/src/widget.ts';
+      mount('#ukn-enquiry-light', { surface: 'light', endpoint: 'http://localhost:4111' });
+    </script>
+  </body>
+</html>

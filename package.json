@@ -10,10 +10,11 @@
   "workspaces": [
     "packages/core",
     "packages/server",
-    "packages/web"
+    "packages/web",
+    "packages/embed"
   ],
   "scripts": {
-    "build": "npm run build -w @ukn/core && npm run build -w @ukn/server && npm run build -w @ukn/web",
+    "build": "npm run build -w @ukn/core && npm run build -w @ukn/server && npm run build -w @ukn/web && npm run build -w @ukn/embed",
     "dev": "npm run dev:server & npm run dev:web",
     "dev:server": "npm run dev -w @ukn/server",
     "dev:web": "npm run dev -w @ukn/web",
@@ -21,7 +22,7 @@
     "seed": "npm run seed -w @ukn/server",
     "demo": "npm run demo -w @ukn/server",
     "test": "npm run test -w @ukn/core && npm run test -w @ukn/server",
-    "typecheck": "tsc -b packages/core packages/server packages/web"
+    "typecheck": "tsc -b packages/core packages/server packages/web packages/embed"
   },
   "devDependencies": {
     "@types/node": "^22.20.2",

@@ -509,6 +509,18 @@ describe('funnel', () => {
     assert.ok(report.diagnosis.some((d) => d.includes('without a quote going out')));
   });
 
+  it('will not report an arrival-to-lead rate above 100%', () => {
+    const events = [
+      ev('page_view', 's1'),
+      ev('enquiry_submitted', 's1'),
+      ev('enquiry_submitted', 'phone-1'),
+      ev('enquiry_submitted', 'phone-2'),
+    ];
+    const report = buildFunnelReport(events);
+    assert.equal(report.overallConversionBps, null);
+    assert.ok(report.diagnosis.some((d) => d.includes('fires no page view')));
+  });
+
   it('flags a leak between opening and submitting', () => {
     const events = [
       ...['s1', 's2', 's3', 's4'].map((s) => ev('page_view', s)),

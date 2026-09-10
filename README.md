@@ -60,14 +60,16 @@ for that reason. The seed loads only figures that are actually evidenced.
 | `PORT` | `4000` | HTTP port |
 | `UKN_DB` | `data/ukn.db` | Database file |
 | `COOKIE_SECRET` | a development value | **Set this in production** |
+| `UKN_PUBLIC_ORIGINS` | none | Comma-separated origins allowed to post enquiries. Unset means none |
 | `UKN_SEED_PASSWORD` | random per user | Fixes seed passwords, for testing |
 
 ## Layout
 
 ```
-packages/core     Domain engines. Pure functions, no I/O, 53 tests.
-packages/server   Fastify API over node:sqlite. 31 integration tests.
+packages/core     Domain engines. Pure functions, no I/O, 54 tests.
+packages/server   Fastify API over node:sqlite. 35 integration tests.
 packages/web      React and Vite front end.
+packages/embed    The enquiry widget for uknitrates.com. No dependencies.
 ```
 
 `packages/core` is where the business lives. It has no dependencies at all, so
@@ -89,7 +91,19 @@ POST /api/public/events      funnel stage events
 ```
 
 Neither needs authentication and neither needs a third-party analytics account.
-Point the website at them and the funnel starts counting.
+
+`packages/embed` is the other half: a self-contained enquiry form for the
+website that posts to both. It renders inside a shadow root, so the site's
+theme cannot reach it, and it needs no build step on that side.
+
+```html
+<div id="ukn-enquiry"></div>
+<script src="https://crm.uknitrates.com/ukn-enquiry.js"
+        data-endpoint="https://crm.uknitrates.com"></script>
+```
+
+Add the site's origin to `UKN_PUBLIC_ORIGINS` or the browser will refuse the
+cross-origin post. See [`docs/WIDGET.md`](docs/WIDGET.md).
 
 ## Documentation
 
@@ -98,6 +112,7 @@ Point the website at them and the funnel starts counting.
 | [`docs/DOMAIN.md`](docs/DOMAIN.md) | The engines, and the reasoning behind each rule |
 | [`docs/API.md`](docs/API.md) | Every endpoint |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Why the system is built this way |
+| [`docs/WIDGET.md`](docs/WIDGET.md) | The site-side enquiry form, and how to deploy it |
 | [`docs/OPEN_QUESTIONS.md`](docs/OPEN_QUESTIONS.md) | What is still unknown, and what each unknown blocks |
 
 ## Tests

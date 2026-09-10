@@ -234,6 +234,13 @@ export function buildFunnelReport(events: FunnelEvent[]): FunnelReport {
   if (quotes > 0 && orders === 0) {
     diagnosis.push(`${quotes} quotes issued with no orders recorded yet. Check the follow-up is happening.`);
   }
+  if (arrivals > 0 && leads > arrivals) {
+    diagnosis.push(
+      `${leads} leads against ${arrivals} recorded arrivals. Enquiries are reaching the system by a ` +
+        'route that fires no page view, so the arrival-to-lead rate cannot be computed. Check the ' +
+        'event snippet is on every page the form appears on.',
+    );
+  }
   if (orders > quotes) {
     diagnosis.push(
       `${orders} orders against ${quotes} quotes. Orders are being booked without a quote going out ` +
@@ -246,7 +253,11 @@ export function buildFunnelReport(events: FunnelEvent[]): FunnelReport {
     softLeads: uniqueSessions(SOFT_LEAD_EVENT),
     abandons: uniqueSessions('enquiry_abandoned'),
     failures: uniqueSessions('enquiry_failed'),
-    overallConversionBps: arrivals > 0 ? Math.round((leads / arrivals) * 10_000) : null,
+    // Same guard as the per-stage rates: leads can outnumber arrivals when
+    // enquiries reach the system by a route that fires no page view, and a
+    // conversion rate above 100% is a broken instrument rather than a triumph.
+    overallConversionBps:
+      arrivals > 0 && leads <= arrivals ? Math.round((leads / arrivals) * 10_000) : null,
     quoteToOrderBps: quotes > 0 && orders <= quotes ? Math.round((orders / quotes) * 10_000) : null,
     diagnosis,
   };

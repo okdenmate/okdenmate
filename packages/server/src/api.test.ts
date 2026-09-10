@@ -31,6 +31,7 @@ async function call(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', url: st
 before(async () => {
   process.env['NODE_ENV'] = 'test';
   process.env['UKN_SEED_PASSWORD'] = 'test-password-1';
+  process.env['UKN_PUBLIC_ORIGINS'] = 'https://uknitrates.com,https://www.uknitrates.com';
   const built = await buildServer(':memory:');
   app = built.app;
   db = built.db;
@@ -394,6 +395,53 @@ describe('storage', () => {
     // 10 positions at GBP 12 is GBP 120, and 25% of that is GBP 30.
     assert.equal(storage.basis_amount, 12_000);
     assert.equal(storage.amount, 3_000);
+  });
+});
+
+describe('cross-origin access', () => {
+  it('allows an approved origin to post an enquiry', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/public/enquiry',
+      headers: { origin: 'https://uknitrates.com' },
+      payload: { contactName: 'CORS test', productIds: ['mgso4'], buyerType: 'business' },
+    });
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers['access-control-allow-origin'], 'https://uknitrates.com');
+  });
+
+  it('refuses an origin that is not on the list', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/public/enquiry',
+      headers: { origin: 'https://not-our-site.example' },
+      payload: { contactName: 'CORS test', productIds: ['mgso4'], buyerType: 'business' },
+    });
+    assert.equal(res.headers['access-control-allow-origin'], undefined);
+  });
+
+  it('never opens the authenticated API to the browser, even from an approved origin', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/accounts',
+      headers: { origin: 'https://uknitrates.com', cookie },
+    });
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.headers['access-control-allow-origin'], undefined);
+  });
+
+  it('answers the preflight for the event endpoint', async () => {
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/api/public/events',
+      headers: {
+        origin: 'https://uknitrates.com',
+        'access-control-request-method': 'POST',
+        'access-control-request-headers': 'content-type',
+      },
+    });
+    assert.ok(res.statusCode === 204 || res.statusCode === 200);
+    assert.equal(res.headers['access-control-allow-origin'], 'https://uknitrates.com');
   });
 });
 

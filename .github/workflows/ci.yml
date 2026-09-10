@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # node:sqlite is built in from 22.5, which is why there is no native
+          # database dependency to compile here.
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck every package
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Seed a scratch database
+        # Proves a fresh install actually comes up, which the unit tests cannot.
+        env:
+          UKN_DB: ${{ runner.temp }}/ci.db
+          UKN_SEED_PASSWORD: ci-password
+        run: npm run seed
+
+      - name: Start and check the server answers
+        env:
+          UKN_DB: ${{ runner.temp }}/ci.db
+          PORT: '4123'
+        run: |
+          npm start &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:4123/api/health > /dev/null; then
+              echo "server is up"
+              curl -sf http://localhost:4123/api/health
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "server did not come up" >&2
+          exit 1
