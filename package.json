@@ -1,0 +1,30 @@
+{
+  "name": "ukn-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UK Nitrates CRM - margin-first, compliance-gated revenue system",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "workspaces": [
+    "packages/core",
+    "packages/server",
+    "packages/web"
+  ],
+  "scripts": {
+    "build": "npm run build -w @ukn/core && npm run build -w @ukn/server && npm run build -w @ukn/web",
+    "dev": "npm run dev:server & npm run dev:web",
+    "dev:server": "npm run dev -w @ukn/server",
+    "dev:web": "npm run dev -w @ukn/web",
+    "start": "npm run start -w @ukn/server",
+    "seed": "npm run seed -w @ukn/server",
+    "demo": "npm run demo -w @ukn/server",
+    "test": "npm run test -w @ukn/core && npm run test -w @ukn/server",
+    "typecheck": "tsc -b packages/core packages/server packages/web"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "typescript": "^5.7.2"
+  }
+}
