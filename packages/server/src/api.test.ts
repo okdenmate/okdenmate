@@ -398,6 +398,56 @@ describe('storage', () => {
   });
 });
 
+describe('how an account takes the material', () => {
+  let accountId = '';
+
+  it('records the nitrate, the fulfilment and the trade on creation', async () => {
+    const res = await call('POST', '/api/accounts', {
+      name: 'Fen Growers Co-op',
+      sector: 'horticulture',
+      natureOfTrade: 'Protected salad under glass',
+      preferredProductId: 'can',
+      fulfilmentPreference: 'storage',
+      typicalOrderKg: 8000,
+    });
+    assert.equal(res.statusCode, 200);
+    accountId = json(res).data.id;
+
+    const list = await call('GET', '/api/accounts?search=Fen Growers');
+    const row = json(list).data.accounts[0];
+    assert.equal(row.fulfilment_preference, 'storage');
+    assert.equal(row.preferred_product_name, 'Calcium nitrate');
+    assert.equal(row.preferred_product_class, 'specialty');
+    assert.equal(row.typical_order_kg, 8000);
+  });
+
+  it('carries the stated trade into the verification record, so the gap is visible at once', async () => {
+    const res = await call('GET', `/api/accounts/${accountId}`);
+    const data = json(res).data;
+    assert.equal(data.kyc.natureOfTrade, 'Protected salad under glass');
+    // Stating a trade is not verification. The account is still blocked.
+    assert.equal(data.kycAssessment.valid, false);
+  });
+
+  it('changes how an account takes it', async () => {
+    await call('PATCH', `/api/accounts/${accountId}`, { fulfilmentPreference: 'immediate' });
+    const list = await call('GET', '/api/accounts?search=Fen Growers');
+    assert.equal(json(list).data.accounts[0].fulfilment_preference, 'immediate');
+  });
+
+  it('refuses a fulfilment value that is not one of the four', async () => {
+    const res = await call('PATCH', `/api/accounts/${accountId}`, { fulfilmentPreference: 'whenever' });
+    assert.equal(res.statusCode, 400);
+  });
+
+  it('defaults to not established rather than guessing', async () => {
+    const res = await call('POST', '/api/accounts', { name: 'Unknown Shape Ltd' });
+    const list = await call('GET', '/api/accounts?search=Unknown Shape');
+    assert.equal(res.statusCode, 200);
+    assert.equal(json(list).data.accounts[0].fulfilment_preference, 'unknown');
+  });
+});
+
 describe('cross-origin access', () => {
   it('allows an approved origin to post an enquiry', async () => {
     const res = await app.inject({

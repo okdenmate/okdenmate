@@ -23,11 +23,29 @@ const DEMO_PREFIX = '[demo]';
 
 interface DemoAccount {
   name: string;
+  /** What they make or do. Required at the point of sale for a regulated line. */
+  natureOfTrade: string;
   sector: string;
+  /** The nitrate this account actually buys. */
+  preferredProductId: string;
+  /**
+   * How they take it.
+   *   immediate — wants it off the floor this week, which only UK stock can do
+   *   storage   — buys it and leaves it on our racking, so we carry the duty
+   *               and the only recurring fee in the business
+   *   scheduled — a contract called off across a season
+   */
+  fulfilment: 'immediate' | 'storage' | 'scheduled';
+  /** What a normal order looks like, in tonnes. */
+  typicalTonnes: number;
   origin: 'new' | 'inherited';
   importer: boolean;
   verified: boolean;
-  natureOfTrade: string;
+  /** Pallet positions let, where they keep stock on our floor. */
+  storagePositions?: number;
+  /** Monthly rate per position, in pounds. Left out where it was never agreed. */
+  storageRatePounds?: number;
+  notes: string;
   orders: Array<{
     productId: string;
     tonnes: number;
@@ -40,36 +58,57 @@ interface DemoAccount {
 
 const ACCOUNTS: DemoAccount[] = [
   {
-    name: `${DEMO_PREFIX} Fen Glassworks Ltd`,
-    sector: 'glass',
+    name: `${DEMO_PREFIX} Wash Valley Growers`,
+    natureOfTrade: 'Protected salad and soft fruit under glass',
+    sector: 'horticulture',
+    preferredProductId: 'can',
+    fulfilment: 'immediate',
+    typicalTonnes: 8,
     origin: 'new',
     importer: false,
     verified: true,
-    natureOfTrade: 'Container glass manufacture',
+    notes:
+      'Buys calcium nitrate for the calcium as much as the nitrogen. Orders against the growing ' +
+      'programme and wants it the same week, so this only works while there is UK stock on the floor.',
     orders: [
-      { productId: 'nano3', tonnes: 15.6, costPerTonne: 440, sellPerTonne: 860, orderedAt: '2026-05-14', paid: true },
-      { productId: 'nano3', tonnes: 12, costPerTonne: 452, sellPerTonne: 865, orderedAt: '2026-07-30', paid: true },
+      { productId: 'can', tonnes: 8, costPerTonne: 395, sellPerTonne: 720, orderedAt: '2026-06-02', paid: true },
+      { productId: 'can', tonnes: 6, costPerTonne: 399, sellPerTonne: 725, orderedAt: '2026-08-19', paid: true },
     ],
   },
   {
-    name: `${DEMO_PREFIX} Wash Valley Growers`,
+    name: `${DEMO_PREFIX} Marshside Nurseries`,
+    natureOfTrade: 'Ornamental nursery stock and bedding',
     sector: 'horticulture',
+    preferredProductId: 'mkp',
+    fulfilment: 'scheduled',
+    typicalTonnes: 2.5,
     origin: 'new',
     importer: false,
     verified: true,
-    natureOfTrade: 'Protected salad crop production',
+    notes:
+      'Fertigation. Specifies MKP by analysis rather than by price, and takes small drops on a ' +
+      'fortnightly schedule. Low tonnage, high margin, almost no price argument.',
     orders: [
-      { productId: 'can', tonnes: 8, costPerTonne: 395, sellPerTonne: 720, orderedAt: '2026-06-02', paid: true },
-      { productId: 'mkp', tonnes: 2.5, costPerTonne: 1180, sellPerTonne: 1690, orderedAt: '2026-08-11', paid: false },
+      { productId: 'mkp', tonnes: 2.5, costPerTonne: 1180, sellPerTonne: 1690, orderedAt: '2026-07-11', paid: true },
+      { productId: 'mkp', tonnes: 2, costPerTonne: 1190, sellPerTonne: 1710, orderedAt: '2026-08-29', paid: false },
     ],
   },
   {
     name: `${DEMO_PREFIX} Holbeach Arable Supplies`,
+    natureOfTrade: 'Agricultural merchant supplying arable growers',
     sector: 'agriculture',
+    preferredProductId: 'an-nitram-345',
+    fulfilment: 'storage',
+    typicalTonnes: 28,
     origin: 'inherited',
     importer: false,
     verified: true,
-    natureOfTrade: 'Agricultural merchant',
+    storagePositions: 24,
+    storageRatePounds: 11.5,
+    notes:
+      'The classic arable pattern: buys ammonium nitrate ahead of the season at a price they like, ' +
+      'then leaves it on our racking and calls it off. Thin margin on the tonne and a recurring ' +
+      'storage fee on top, which is the only part of this account that pays every month.',
     orders: [
       { productId: 'an-nitram-345', tonnes: 28, costPerTonne: 441, sellPerTonne: 461, orderedAt: '2026-04-08', paid: true },
       { productId: 'an-nitram-345', tonnes: 28, costPerTonne: 444, sellPerTonne: 462, orderedAt: '2026-06-19', paid: true },
@@ -77,24 +116,128 @@ const ACCOUNTS: DemoAccount[] = [
     ],
   },
   {
-    name: `${DEMO_PREFIX} Marsh & Sons Pyrotechnics`,
-    sector: 'pyrotechnics',
+    name: `${DEMO_PREFIX} Terrington Estates`,
+    natureOfTrade: 'Mixed arable farm, 1,400 acres',
+    sector: 'agriculture',
+    preferredProductId: 'an-nitram-345',
+    fulfilment: 'immediate',
+    typicalTonnes: 24,
     origin: 'new',
     importer: false,
     verified: false,
-    natureOfTrade: 'Display firework manufacture',
+    notes:
+      'Buys on the spot price and checks it against the AHDB figure before answering the phone. ' +
+      'No verification on file, so nothing can be supplied yet. The mix-shift route for this ' +
+      'sector is foliar potassium nitrate: a different job, not a cheaper tonne.',
     orders: [],
   },
   {
+    name: `${DEMO_PREFIX} Anglia Cure & Cull`,
+    natureOfTrade: 'Bacon and charcuterie curing',
+    sector: 'food_production',
+    preferredProductId: 'nano3',
+    fulfilment: 'storage',
+    typicalTonnes: 4,
+    origin: 'new',
+    importer: false,
+    verified: true,
+    storagePositions: 8,
+    storageRatePounds: 12.5,
+    notes:
+      'Food-grade sodium nitrate, which prices 30 to 50 per cent above technical. Holds buffer ' +
+      'stock with us rather than in a food facility, and pays for the fact that we carry the duty. ' +
+      'Grade of current inventory is unconfirmed (Q5), so do not promise food grade until it is.',
+    orders: [
+      { productId: 'nano3', tonnes: 4, costPerTonne: 610, sellPerTonne: 1180, orderedAt: '2026-05-21', paid: true },
+      { productId: 'nano3', tonnes: 3.5, costPerTonne: 615, sellPerTonne: 1190, orderedAt: '2026-08-06', paid: true },
+    ],
+  },
+  {
+    name: `${DEMO_PREFIX} Fen Glassworks Ltd`,
+    natureOfTrade: 'Container glass manufacture',
+    sector: 'glass',
+    preferredProductId: 'nano3',
+    fulfilment: 'scheduled',
+    typicalTonnes: 15.6,
+    origin: 'new',
+    importer: false,
+    verified: true,
+    storagePositions: 14,
+    storageRatePounds: 11.5,
+    notes:
+      'Sodium nitrate as a refining agent. Steady offtake against a furnace campaign, so the ' +
+      'schedule matters more to them than the price per tonne.',
+    orders: [
+      { productId: 'nano3', tonnes: 15.6, costPerTonne: 440, sellPerTonne: 860, orderedAt: '2026-05-14', paid: true },
+      { productId: 'nano3', tonnes: 12, costPerTonne: 452, sellPerTonne: 865, orderedAt: '2026-07-30', paid: true },
+    ],
+  },
+  {
     name: `${DEMO_PREFIX} Ouse Water Services`,
+    natureOfTrade: 'Municipal wastewater treatment',
     sector: 'water_treatment',
+    preferredProductId: 'nano3',
+    fulfilment: 'scheduled',
+    typicalTonnes: 22,
     origin: 'new',
     importer: true,
     verified: true,
-    natureOfTrade: 'Municipal wastewater treatment',
+    notes:
+      'Sodium nitrate for odour and sulphide control, on a contract rather than spot. Flagged as a ' +
+      'possible direct importer: if they can buy at source the switching cost is near zero, so treat ' +
+      'this margin as at risk rather than as a base.',
     orders: [
       { productId: 'nano3', tonnes: 22, costPerTonne: 448, sellPerTonne: 795, orderedAt: '2026-07-04', paid: true },
     ],
+  },
+  {
+    name: `${DEMO_PREFIX} Marsh & Sons Pyrotechnics`,
+    natureOfTrade: 'Display firework manufacture',
+    sector: 'pyrotechnics',
+    preferredProductId: 'kno3-13-0-46',
+    fulfilment: 'immediate',
+    typicalTonnes: 4,
+    origin: 'new',
+    importer: false,
+    verified: false,
+    notes:
+      'Potassium nitrate as an oxidiser. Small tonnages, high margin, and a reportable substance, so ' +
+      'they expect a supplier who documents properly. No verification on file, so the quote is blocked.',
+    orders: [],
+  },
+  {
+    name: `${DEMO_PREFIX} Wisbech Ceramics Studio`,
+    natureOfTrade: 'Studio glaze and frit production',
+    sector: 'ceramics',
+    preferredProductId: 'kno3-13-0-46',
+    fulfilment: 'immediate',
+    typicalTonnes: 1.2,
+    origin: 'new',
+    importer: false,
+    verified: true,
+    notes:
+      'Potassium nitrate in glazes and frits. Tiny, regular and almost entirely price-insensitive. ' +
+      'Worth having precisely because nobody else wants to pick and pack 1.2 tonnes.',
+    orders: [
+      { productId: 'kno3-13-0-46', tonnes: 1.2, costPerTonne: 655, sellPerTonne: 985, orderedAt: '2026-06-27', paid: true },
+    ],
+  },
+  {
+    name: `${DEMO_PREFIX} Deeping Feed Blends`,
+    natureOfTrade: 'Compound animal feed manufacture',
+    sector: 'animal_nutrition',
+    preferredProductId: 'nano3',
+    fulfilment: 'storage',
+    typicalTonnes: 20,
+    origin: 'inherited',
+    importer: false,
+    verified: false,
+    storagePositions: 6,
+    notes:
+      'Specification-driven buyer with repeat volumes, holding stock on our floor. The storage rate ' +
+      'was never agreed, so the monthly charge cannot be raised and the storage commission does not ' +
+      'accrue. That is Q3, and this account is what it costs.',
+    orders: [],
   },
 ];
 
@@ -251,15 +394,20 @@ export function loadDemo(db: Db): void {
       accountIds.set(a.name, accountId);
       db.run(
         `INSERT INTO accounts (id, name, business, sector, origin, owner_user_id, payment_terms_days,
-           possible_direct_importer, status, notes, created_at, updated_at)
-         VALUES (?,?, 'UKN', ?,?,?, 30, ?, 'active', ?, ?, ?)`,
+           possible_direct_importer, status, notes, fulfilment_preference, preferred_product_id,
+           typical_order_kg, nature_of_trade, created_at, updated_at)
+         VALUES (?,?, 'UKN', ?,?,?, 30, ?, 'active', ?,?,?,?,?,?,?)`,
         accountId,
         a.name,
         a.sector,
         a.origin,
         user.id,
         toInt(a.importer),
-        'Fictional account created by the demo loader. Not a real customer.',
+        `${a.notes}\n\nFictional account created by the demo loader. Not a real customer.`,
+        a.fulfilment,
+        a.preferredProductId,
+        fromTonnes(a.typicalTonnes),
+        a.natureOfTrade,
         now(),
         now(),
       );
@@ -368,45 +516,49 @@ export function loadDemo(db: Db): void {
 
   for (const e of ENQUIRIES) intakeEnquiry(db, e);
 
-  // Storage: one agreement with a rate and one without, so both the revenue and
-  // the unresolved-charge path are visible.
-  const glassworks = accountIds.get(`${DEMO_PREFIX} Fen Glassworks Ltd`)!;
-  const growers = accountIds.get(`${DEMO_PREFIX} Wash Valley Growers`)!;
-  const ratedAgreement = id();
-  const unratedAgreement = id();
+  /*
+   * Storage agreements follow from the accounts themselves. An account that
+   * said it leaves stock on our racking gets one; an account that wants it off
+   * the floor does not. One of them has no agreed rate, which is deliberate:
+   * that is what Q3 costs, and it shows up as a month that cannot be billed
+   * rather than as a month that was free.
+   */
+  const storageAccounts = ACCOUNTS.filter((a) => a.storagePositions && a.storagePositions > 0);
+  const agreementIds = new Map<string, string>();
 
   db.tx(() => {
-    db.run(
-      `INSERT INTO storage_agreements (id, account_id, product_id, fee_basis, rate_pence, pallet_positions, started_at, duty_accepted, notes, created_at)
-       VALUES (?,?, 'nano3', 'per_pallet_month', ?, 14, '2026-05-01', 1, 'Demo data.', ?)`,
-      ratedAgreement,
-      glassworks,
-      fromPounds(11.5),
-      now(),
-    );
-    db.run(
-      `INSERT INTO storage_agreements (id, account_id, product_id, fee_basis, rate_pence, pallet_positions, started_at, duty_accepted, notes, created_at)
-       VALUES (?,?, 'can', 'per_pallet_month', NULL, 6, '2026-07-01', 0, 'Rate never agreed. Demo data.', ?)`,
-      unratedAgreement,
-      growers,
-      now(),
-    );
-    for (const [agreement, account, productId, direction, t, when] of [
-      [ratedAgreement, glassworks, 'nano3', 'in', 16.8, '2026-05-02'],
-      [ratedAgreement, glassworks, 'nano3', 'out', 4.2, '2026-06-20'],
-      [unratedAgreement, growers, 'can', 'in', 7.2, '2026-07-03'],
-    ] as Array<[string, string, string, 'in' | 'out', number, string]>) {
+    for (const a of storageAccounts) {
+      const accountId = accountIds.get(a.name)!;
+      const agreementId = id();
+      agreementIds.set(a.name, agreementId);
+      db.run(
+        `INSERT INTO storage_agreements (id, account_id, product_id, fee_basis, rate_pence, pallet_positions,
+           started_at, duty_accepted, notes, created_at)
+         VALUES (?,?,?, 'per_pallet_month', ?,?, '2026-05-01', ?, ?, ?)`,
+        agreementId,
+        accountId,
+        a.preferredProductId,
+        a.storageRatePounds === undefined ? null : fromPounds(a.storageRatePounds),
+        a.storagePositions!,
+        toInt(a.storageRatePounds !== undefined),
+        a.storageRatePounds === undefined
+          ? 'Rate never agreed, so the monthly charge cannot be raised (Q3). Demo data.'
+          : 'Demo data.',
+        now(),
+      );
+
+      // Goods in for what they are holding, then a partial call-off, so the
+      // ledger proves a peak rather than only showing today's balance.
+      const heldTonnes = a.typicalTonnes;
       db.run(
         `INSERT INTO storage_movements (id, agreement_id, account_id, product_id, direction, quantity_kg, occurred_at, reference, created_at)
-         VALUES (?,?,?,?,?,?,?, 'demo', ?)`,
-        id(),
-        agreement,
-        account,
-        productId,
-        direction,
-        fromTonnes(t),
-        when,
-        now(),
+         VALUES (?,?,?,?, 'in', ?, '2026-05-02', 'demo', ?)`,
+        id(), agreementId, accountId, a.preferredProductId, fromTonnes(heldTonnes), now(),
+      );
+      db.run(
+        `INSERT INTO storage_movements (id, agreement_id, account_id, product_id, direction, quantity_kg, occurred_at, reference, created_at)
+         VALUES (?,?,?,?, 'out', ?, '2026-07-15', 'demo call-off', ?)`,
+        id(), agreementId, accountId, a.preferredProductId, fromTonnes(heldTonnes * 0.3), now(),
       );
     }
   });

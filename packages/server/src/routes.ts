@@ -128,7 +128,10 @@ export function registerRoutes(app: FastifyInstance, db: Db): void {
               (SELECT COUNT(*) FROM orders o WHERE o.account_id = a.id) AS order_count,
               (SELECT COALESCE(SUM(o.gross_margin),0) FROM orders o WHERE o.account_id = a.id) AS gross_margin,
               (SELECT MAX(o.ordered_at) FROM orders o WHERE o.account_id = a.id) AS last_order_at,
-              (SELECT k.verified_at FROM kyc_records k WHERE k.account_id = a.id) AS kyc_verified_at
+              (SELECT k.verified_at FROM kyc_records k WHERE k.account_id = a.id) AS kyc_verified_at,
+              (SELECT p.name FROM products p WHERE p.id = a.preferred_product_id) AS preferred_product_name,
+              (SELECT p.product_class FROM products p WHERE p.id = a.preferred_product_id) AS preferred_product_class,
+              (SELECT COUNT(*) FROM storage_agreements s WHERE s.account_id = a.id AND s.ended_at IS NULL) AS storage_agreements
          FROM accounts a
         WHERE (? IS NULL OR a.name LIKE '%' || ? || '%')
           AND (? IS NULL OR a.status = ?)
@@ -156,6 +159,10 @@ export function registerRoutes(app: FastifyInstance, db: Db): void {
         companiesHouseNumber: z.string().nullable().optional(),
         paymentTermsDays: z.number().int().min(0).max(180).default(30),
         possibleDirectImporter: z.boolean().default(false),
+        fulfilmentPreference: z.enum(['immediate', 'storage', 'scheduled', 'unknown']).default('unknown'),
+        preferredProductId: z.string().nullable().optional(),
+        typicalOrderKg: z.number().int().positive().nullable().optional(),
+        natureOfTrade: z.string().nullable().optional(),
         notes: z.string().default(''),
       })
       .parse(req.body);
@@ -164,8 +171,9 @@ export function registerRoutes(app: FastifyInstance, db: Db): void {
     db.tx(() => {
       db.run(
         `INSERT INTO accounts (id, name, business, sector, origin, owner_user_id, companies_house_number,
-          website, phone, address, postcode, payment_terms_days, possible_direct_importer, status, notes, created_at, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, 'prospect', ?,?,?)`,
+          website, phone, address, postcode, payment_terms_days, possible_direct_importer, status, notes,
+          fulfilment_preference, preferred_product_id, typical_order_kg, nature_of_trade, created_at, updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?, 'prospect', ?,?,?,?,?,?,?)`,
         accountId,
         body.name,
         body.business,
@@ -180,14 +188,22 @@ export function registerRoutes(app: FastifyInstance, db: Db): void {
         body.paymentTermsDays,
         toInt(body.possibleDirectImporter),
         body.notes,
+        body.fulfilmentPreference,
+        body.preferredProductId ?? null,
+        body.typicalOrderKg ?? null,
+        body.natureOfTrade ?? null,
         now(),
         now(),
       );
+      // Whatever the account already told us about its trade goes straight into
+      // the verification record, so the compliance gap is visible immediately
+      // rather than being rediscovered at the point of quoting.
       db.run(
-        'INSERT INTO kyc_records (id, account_id, business_name, buyer_type, created_at, updated_at) VALUES (?,?,?,?,?,?)',
+        'INSERT INTO kyc_records (id, account_id, business_name, nature_of_trade, buyer_type, created_at, updated_at) VALUES (?,?,?,?,?,?,?)',
         id(),
         accountId,
         body.name,
+        body.natureOfTrade ?? null,
         'unknown',
         now(),
         now(),
@@ -239,6 +255,10 @@ export function registerRoutes(app: FastifyInstance, db: Db): void {
         postcode: z.string().nullable().optional(),
         paymentTermsDays: z.number().int().min(0).max(180).optional(),
         possibleDirectImporter: z.boolean().optional(),
+        fulfilmentPreference: z.enum(['immediate', 'storage', 'scheduled', 'unknown']).optional(),
+        preferredProductId: z.string().nullable().optional(),
+        typicalOrderKg: z.number().int().positive().nullable().optional(),
+        natureOfTrade: z.string().nullable().optional(),
         notes: z.string().optional(),
       })
       .parse(req.body);
@@ -254,6 +274,10 @@ export function registerRoutes(app: FastifyInstance, db: Db): void {
       postcode: body.postcode,
       payment_terms_days: body.paymentTermsDays,
       possible_direct_importer: body.possibleDirectImporter === undefined ? undefined : toInt(body.possibleDirectImporter),
+      fulfilment_preference: body.fulfilmentPreference,
+      preferred_product_id: body.preferredProductId,
+      typical_order_kg: body.typicalOrderKg,
+      nature_of_trade: body.natureOfTrade,
       notes: body.notes,
     };
     const sets = Object.entries(columns).filter(([, v]) => v !== undefined);

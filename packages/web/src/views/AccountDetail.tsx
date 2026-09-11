@@ -4,6 +4,7 @@ import { api, ApiError } from '../api';
 import { useApi } from '../hooks';
 import type { KycAssessment, Row } from '../types';
 import { Button, Callout, Chip, Empty, Field, Panel, Stat } from '../components/ui';
+import { Fulfilment } from './Accounts';
 import { gbp, pct, shortDate } from '../format';
 
 interface AccountPayload {
@@ -94,6 +95,52 @@ export function AccountDetail({ ctx, accountId }: { ctx: Ctx; accountId: string 
           </Callout>
         </div>
       )}
+
+      {/* What this customer actually buys and how they take it. Both decide the
+          conversation before any price is discussed. */}
+      <Panel className="rise" title="What they buy" hint="The shape of the account, before any price is discussed">
+        <div className="grid cols-4">
+          <Stat
+            label="Nitrate"
+            value={account['preferred_product_name'] ? String(account['preferred_product_name']) : 'Not known'}
+            unknown={!account['preferred_product_name']}
+            note={account['nature_of_trade'] ? `For ${String(account['nature_of_trade']).toLowerCase()}.` : 'Nature of trade not recorded.'}
+          />
+          <div className="stat">
+            <div className="label">How they take it</div>
+            <div style={{ marginTop: 4 }}>
+              <Fulfilment
+                value={String(account['fulfilment_preference'] ?? 'unknown')}
+                storage={data.storageAgreements.length}
+              />
+            </div>
+            <div className="note" style={{ marginTop: 6 }}>
+              {String(account['fulfilment_preference']) === 'storage'
+                ? 'Buys and leaves it on our racking, so we carry the duty and charge for it monthly.'
+                : String(account['fulfilment_preference']) === 'immediate'
+                  ? 'Wants it off the floor, which only UK stock at King’s Lynn can do. Imported lines are eight to ten weeks.'
+                  : String(account['fulfilment_preference']) === 'scheduled'
+                    ? 'Called off against a contract or a season rather than bought on the spot.'
+                    : 'Not established. Ask before quoting: it decides whether this account can also carry a storage fee.'}
+            </div>
+          </div>
+          <Stat
+            label="Typical order"
+            value={account['typical_order_kg'] ? `${(Number(account['typical_order_kg']) / 1000).toFixed(1)} t` : 'Not known'}
+            unknown={!account['typical_order_kg']}
+            note="A 28 t arable buyer and a 2 t pyrotechnics buyer are not the same customer."
+          />
+          <Stat
+            label="Storage agreements"
+            value={String(data.storageAgreements.length)}
+            note={
+              String(account['fulfilment_preference']) === 'storage' && data.storageAgreements.length === 0
+                ? 'They keep stock here with nothing agreed in writing. That is unbilled revenue and an undocumented duty.'
+                : 'Live agreements on the racking.'
+            }
+          />
+        </div>
+      </Panel>
 
       <div className="grid cols-4 rise" style={{ marginBottom: 16 }}>
         <Panel><Stat label="Gross margin, all time" value={gbp(data.revenue?.grossMargin ?? 0, true)} /></Panel>

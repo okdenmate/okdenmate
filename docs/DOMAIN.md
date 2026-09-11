@@ -56,6 +56,35 @@ Two services advertised on the live site — bespoke blending and white-label
 packing — are held in the catalogue as explicitly not deliverable, so nobody
 quotes them by accident.
 
+## How an account takes it
+
+An account carries four facts about its supply beyond its name and sector,
+because all four change the conversation before a price is ever discussed:
+
+| Field | Why it is on the account |
+|---|---|
+| Nature of trade | Required at the point of sale for a regulated line, and the single most useful thing to know before quoting a grade |
+| Preferred nitrate | Drives the mix-shift prompt, and stops a rep opening a call by asking something already on file |
+| Fulfilment | Immediately, stored here, called off, or not established |
+| Typical order | A 28 t arable buyer and a 2 t pyrotechnics buyer are not the same customer even at identical revenue |
+
+Fulfilment is the commercially important one, and the first version did not
+model it at all:
+
+- **Immediately** — wants it off the floor this week, which only UK stock at
+  King's Lynn can do. An imported line is eight to ten weeks, so promising a
+  date on one of those is promising something the business cannot deliver.
+- **Stored here** — buys it and leaves it on the racking. A margin sale *plus*
+  the only recurring fee in the business, and the point at which the customer's
+  notification duty becomes ours.
+- **Called off** — a contract or a season drawn down in instalments.
+- **Not established** — the default, never guessed, because guessing it loses
+  the storage conversation entirely.
+
+An account that says it stores with us but has no storage agreement is flagged
+in the list. That combination is unbilled revenue sitting beside an
+undocumented duty, which is the worst of both.
+
 ## Margin
 
 `computeDealMargin` returns revenue, cost and gross margin, split by product

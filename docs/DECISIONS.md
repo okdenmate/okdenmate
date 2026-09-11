@@ -54,7 +54,15 @@ records what the customer paid and not what the goods cost. When the invoice
 detail arrives those two lines should be corrected, not appended to.
 
 Demo data lives in a separate script and a separate file, with every account
-prefixed `[demo]`.
+prefixed `[demo]`. Its ten clients span the real shape of the book rather than
+merely looking plausible: two in horticulture (one wanting it immediately, one on
+a fortnightly schedule), two in agriculture (one storing a season's ammonium
+nitrate on our racking, one buying on the spot price with no verification on
+file), plus food production, glass, water treatment, pyrotechnics, ceramics and
+animal nutrition. Each carries its trade, its nitrate, its tonnage and how it
+takes delivery, so every branch in the system has a customer that exercises it:
+a blocked quote, an unbillable storage month, a direct-importer risk, and a
+commodity account earning a tenth of the specialty ones beside it.
 
 ## Measured on gross margin, not revenue
 

@@ -385,4 +385,32 @@ CREATE TABLE audit_log (
 CREATE INDEX idx_audit_entity ON audit_log(entity, entity_id, created_at DESC);
 `,
   },
+  {
+    version: 2,
+    name: 'account_supply_profile',
+    sql: `
+-- How a customer actually takes the material, which the first cut did not model
+-- at all. It matters commercially: a buyer who wants it off the floor this week
+-- is a margin sale, and one who leaves it on the racking is a margin sale plus
+-- the only recurring fee in the business. The two need different conversations,
+-- so the account has to know which it is.
+ALTER TABLE accounts ADD COLUMN fulfilment_preference TEXT
+  CHECK (fulfilment_preference IN ('immediate','storage','scheduled','unknown'))
+  NOT NULL DEFAULT 'unknown';
+
+-- The line this account actually buys. Drives the mix-shift prompt and stops a
+-- rep opening a call by asking a question the answer to which is on file.
+ALTER TABLE accounts ADD COLUMN preferred_product_id TEXT REFERENCES products(id);
+
+-- What a normal order looks like, in kilogrammes. A 28t arable buyer and a 2t
+-- pyrotechnics buyer are not the same customer even at the same revenue.
+ALTER TABLE accounts ADD COLUMN typical_order_kg INTEGER;
+
+-- What they make or do. Required at the point of sale for a regulated line, and
+-- the single most useful thing to know before quoting a grade.
+ALTER TABLE accounts ADD COLUMN nature_of_trade TEXT;
+
+CREATE INDEX idx_accounts_fulfilment ON accounts(fulfilment_preference);
+`,
+  },
 ];
